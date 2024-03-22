@@ -57,7 +57,10 @@ def generate_summary(
             return
         
     elif(model=="hf"):
-        pass
+        print("1111")
+        
+        
+        
     else:
         eval_logger.error("Invalid model type")
         return
