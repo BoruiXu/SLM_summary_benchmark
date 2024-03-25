@@ -25,6 +25,8 @@ llm_model = "Qwen/Qwen1.5-72B-Chat"
 #genreate prompt
 def generate_prompt(few_shot: int, aspect:str, refer_news = None, refer_summary = None, refer_score = None):
     prompt = "You are a helpful summary assistant."
+    aspect = aspect.split("_")[-1]
+    
     if(aspect!="Faithfulness"):
         base_prompt = "In this task, you will be provided with a news article and a generated summary.\n"\
                 "Your task is to rate the " + aspect +" of the generated summary with a score from 1 to 5, "\
@@ -213,6 +215,6 @@ def evaluate(path, aspect, client, llm_model, reference_model = 'reference', few
     
 if __name__ == "__main__":
     
-    p = '/home/xbr/LLM/benchmark_llm_summarization/likert_evaluation_results_cnndm_average.json'
-    aspect = "relevance"
-    evaluate(p, aspect, client, llm_model)
+    p = './filter_annotations_summeval.jsonl'
+    aspect = "expert_coherence"
+    evaluate(p, aspect, client, llm_model, reference_model = 'M0')
