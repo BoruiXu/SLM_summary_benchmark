@@ -82,7 +82,7 @@ def score_api_chat(client, model_name, prompt, user_input, temperature = 0):
         # "\n\nReference summary: "
         #         +reference_summary+
     res = chat_response.choices[0].message.content
-        
+    print(res)    
     match = re.search(r':\s*(\d+)', res)   
     score = match.group(1) if match is not None else 1
     return int(score)
@@ -152,10 +152,16 @@ def correlation_score(dict1, dict2):
     
 #     return res_news_list, res_summary_list, res_score_list, max_index, min_index
 
-def evaluate(path, aspect, reference_model,few_shot = 0):
+def evaluate(path, aspect, client, llm_model, reference_model = 'reference', few_shot = 0):
+    
+    dataset_name = path.split("/")[-1].split(".")[0]
+    print("evaluating dataset: ", dataset_name)
+    model_name = llm_model.split("/")[1]
+    
     target_dataset = pd.read_json(path)
     model_list = list(set(target_dataset['model'].tolist()))
     model_list.remove(reference_model)
+    model_list = sorted(model_list)
     
     
     candiate_news = target_dataset[target_dataset["model"]==reference_model]["article"].to_list()
@@ -171,7 +177,8 @@ def evaluate(path, aspect, reference_model,few_shot = 0):
     else:
         prompt = generate_prompt(0, aspect)
     
-    print("Prompt:\n", prompt)
+    print("Prompt:")
+    print(prompt)
     #save result    
     model_eva_dict= {}
     human_eva_dict = {}
@@ -183,17 +190,29 @@ def evaluate(path, aspect, reference_model,few_shot = 0):
         tmp_news_list = tmp_dataset['article'].tolist()
         
         tmp_summary_list = tmp_dataset['summary'].tolist()
-        tmp_score_list = tmp_dataset[tag_aspect].tolist()
+        tmp_score_list = tmp_dataset[aspect].tolist()
         score_list = loop_score_api_chat(tmp_news_list, tmp_summary_list, client, llm_model, prompt)
         
         model_eva_dict[m] = score_list
         human_eva_dict[m] = tmp_score_list  
     
-
-
+    #save the result
+    if(few_shot==0):
+        save_name = str(model_name)+'_'+str(dataset_name)+'_'+str(aspect)+'_eva.json'
+        human_save = 'human_score_'+str(dataset_name)+'_'+str(aspect)+'_eva.json'
+        prompt_save = 'prompt_'+str(dataset_name)+'_'+str(aspect)+'_eva.json'
     
-#save the result
-with open('./evaluate_result/'+'qwen72_cnndm_'+tag_aspect+'_template_cnndm_max'+str(max_index)+'_min_'+str(min_index)+'_eva.json', 'w') as fp:
-    json.dump(model_eva_dict, fp)
+    with open('./LLM_evaluation_correlation_with_human/'+save_name, 'w') as fp:
+        json.dump(model_eva_dict, fp)
+    with open('./LLM_evaluation_correlation_with_human/'+human_save, 'w') as fp:
+        json.dump(human_eva_dict, fp)
+    with open('./LLM_evaluation_correlation_with_human/'+prompt_save, 'w') as fp:
+        json.dump(prompt, fp)
 
-correlation_score(model_eva_dict, human_eva_dict)
+    correlation_score(model_eva_dict, human_eva_dict)
+    
+if __name__ == "__main__":
+    
+    p = '/home/xbr/LLM/benchmark_llm_summarization/likert_evaluation_results_cnndm_average.json'
+    aspect = "relevance"
+    evaluate(p, aspect, client, llm_model)
