@@ -17,7 +17,7 @@ client = OpenAI(
     base_url=openai_api_base,
 )
 
-llm_model = "Qwen/Qwen1.5-72B-Chat"
+llm_model = "abacusai/Smaug-72B-v0.1"#"davidkim205/Rhea-72b-v0.5"#"meta-llama/Llama-2-70b-chat-hf"#"Qwen/Qwen1.5-72B-Chat"
 
 
 #define function block
@@ -33,7 +33,7 @@ def generate_prompt(few_shot: int, aspect:str, refer_news = None, refer_summary 
                 "where 1 is the lowest and 5 is the highest.\n"\
                 "Please make sure you read and understand these instructions carefully. Please keep this document open while reviewing, and refer to it as needed.\n"
         if(few_shot==0):
-            prompt = base_prompt+ "Example response:\n"+aspect+" (1-5): 3"
+            prompt = base_prompt+ "Example response:\n"+aspect+" (1-5): 2"
         else:
             shot_num = len(refer_news)
             if shot_num>2:
@@ -72,22 +72,31 @@ def generate_prompt(few_shot: int, aspect:str, refer_news = None, refer_summary 
 
 #get socre using openai api
 def score_api_chat(client, model_name, prompt, user_input, temperature = 0):
-    chat_response = client.chat.completions.create(
-            model=model_name,
-            messages=[
-                {"role": "system", "content": prompt},
-                {"role": "user", "content": user_input},
+    
+    if("chat" in model_name):
+        chat_response = client.chat.completions.create(
+                model=model_name,
+                messages=[
+                    {"role": "system", "content": prompt},
+                    {"role": "user", "content": user_input},
+                    
+                ],
+                temperature=temperature,
+                max_tokens=15,
                 
-            ],
-            temperature=temperature
-        )
-        # "\n\nReference summary: "
-        #         +reference_summary+
-    res = chat_response.choices[0].message.content
-    print(res)    
-    match = re.search(r':\s*(\d+)', res)   
-    score = match.group(1) if match is not None else 1
-    return int(score)
+            )
+            # "\n\nReference summary: "
+            #         +reference_summary+
+        res = chat_response.choices[0].message.content
+        print(res)    
+        match = re.search(r':\s*(\d+)', res)   
+        score = match.group(1) if match is not None else 1
+        return int(score)
+    else:
+        completion = client.completions.create(model="abacusai/Smaug-72B-v0.1",
+                                      prompt=prompt+"\n"+user_input,
+                                      temperature=0)
+        print("Result:", completion.choices[0].text)
 
 
 def loop_score_api_chat(news_list, summary_list, client, model_name, prompt,temperature = 0):
@@ -215,6 +224,6 @@ def evaluate(path, aspect, client, llm_model, reference_model = 'reference', few
     
 if __name__ == "__main__":
     
-    p = './filter_annotations_summeval.jsonl'
+    p = './filter_annotations_summeval.jsonl' #'/home/xbr/LLM/benchmark_llm_summarization/likert_evaluation_results_xsum_average.json'
     aspect = "expert_coherence"
     evaluate(p, aspect, client, llm_model, reference_model = 'M0')
