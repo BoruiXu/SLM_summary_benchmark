@@ -12,8 +12,11 @@ import sacrebleu
 #load bert score model
 from rouge_score import rouge_scorer, scoring
 from evaluate import load
-bert_score = load("bertscore")
 
+bert_score = load("bertscore")
+# bleurt = load("bleurt","BLEURT-20")
+meteor = load("meteor")
+rouge_hf = load('rouge')
 
 
 def rouge(refs, preds):
@@ -25,7 +28,7 @@ def rouge(refs, preds):
     :param preds:
         A `list` of predicted `strs`.
     """
-    rouge_types = ["rouge1", "rouge4", "rougeLsum"]
+    rouge_types = ["rouge1", "rouge2", "rougeLsum"]
     scorer = rouge_scorer.RougeScorer(rouge_types)
     # Add newlines between sentences to correctly compute `rougeLsum`.
 
@@ -49,6 +52,10 @@ def BertScore(refs, preds):
     
     return bert_score_res
 
+def BLEURT(refs, preds):
+    bleurt_res = bleurt.compute(predictions=[refs], references=[preds])
+    return bleurt_res
+
 def bleu(refs, preds):
     """
     Returns `t5` style BLEU scores. See the related implementation:
@@ -64,9 +71,10 @@ def bleu(refs, preds):
     return score
 
 def get_score(refs, preds,metric):
-    
+    if(preds==""):
+        preds = " "
     result = 0
-    if(metric[:5]=="rouge"):
+    if(metric[:5]=="rouge" and metric!="rouge_hf"):
         rouge_res = rouge([refs], [preds])
         result = rouge_res[metric]
     elif(metric=="bertscore"):
@@ -74,9 +82,13 @@ def get_score(refs, preds,metric):
     elif(metric=="bleu"):
         result = bleu([refs], [preds])
     elif(metric=="chrf"):
-        if(preds==""):
-            preds = " "
         result = sacrebleu.corpus_chrf(preds, [refs]).score
+    elif(metric=="bleurt"):
+        result = BLEURT(refs, preds)["scores"][0]
+    elif(metric=="meteor"):
+        result = meteor.compute(predictions=[preds], references=[refs])["meteor"]
+    elif(metric=="rouge_hf"):
+        result = rouge_hf.compute(predictions=[preds], references=[refs])["rougeLsum"]
     
     
     return result
@@ -172,5 +184,5 @@ if __name__ == "__main__":
     
     p = '/home/xbr/LLM/benchmark_llm_summarization/likert_evaluation_results_cnndm_average.json'#'./filter_annotations_summeval.jsonl'#'./filter_annotations_summeval.jsonl'# #
     aspect = "relevance"
-    evaluate(p, aspect)
+    evaluate(p, aspect, metric="bertscore")
 
