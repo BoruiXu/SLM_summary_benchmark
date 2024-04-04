@@ -11,7 +11,7 @@ import json
 from scipy.stats import kendalltau
 
 
-prompt = "You are a helpful summary assistant. You can help users summarize news in one sentence."
+prompt = "You are a helpful summary assistant. You can help users summarize news in two sentences."
 
 
 from openai import OpenAI          
@@ -31,20 +31,21 @@ from datasets import load_dataset
 
 
 #generate qwen summary
-data = json.load(open('/home/xbr/LLM/benchmark_llm_summarization/likert_evaluation_results_xsum_average.json'))
-#data = json.load(open('./filter_annotations_summeval.jsonl'))
+#data = json.load(open('/home/xbr/LLM/benchmark_llm_summarization/likert_evaluation_results_cnndm_average.json'))
+data = json.load(open('./filter_annotations_summeval.jsonl'))
 
 for i in tqdm(range(len(data))):
     news = data[i]['article']
     
     chat_response = client.chat.completions.create(
-        model="meta-llama/Llama-2-70b-chat-hf",
+        model="01-ai/Yi-34B-Chat",
         messages=[
             {"role": "system", "content": prompt},
-            {"role": "user", "content": "Summarize the news in one sentence.\nnews: "+news+'\nSummary: '},
+            {"role": "user", "content": "Summarize the news in two sentences.\nnews: "+news+'\nSummary: '},
             
         ],
-        temperature=0
+        temperature=0,
+        max_tokens=50,
     )
     
     res = chat_response.choices[0].message.content
@@ -53,5 +54,6 @@ for i in tqdm(range(len(data))):
     
 #save to json
 #./filter_annotations_summeval_llama2_summary.jsonl
-with open('/home/xbr/LLM/benchmark_llm_summarization/likert_evaluation_results_xsum_average_with_llama2.json', 'w') as f:
+#/home/xbr/LLM/benchmark_llm_summarization/likert_evaluation_results_cnndm_average_with_yi34b.json
+with open('./filter_annotations_summeval_yi34_summary.jsonl', 'w') as f:
     json.dump(data, f, indent=4)

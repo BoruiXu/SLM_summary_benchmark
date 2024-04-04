@@ -14,9 +14,10 @@ from rouge_score import rouge_scorer, scoring
 from evaluate import load
 
 bert_score = load("bertscore")
-# bleurt = load("bleurt","BLEURT-20")
+bleurt = load("bleurt","BLEURT-20")
 meteor = load("meteor")
 rouge_hf = load('rouge')
+bleu_hf = load("bleu")
 
 
 def rouge(refs, preds):
@@ -48,7 +49,7 @@ def rouge(refs, preds):
 
 
 def BertScore(refs, preds):
-    bert_score_res = bert_score.compute(predictions=[refs], references=[preds], model_type="microsoft/deberta-xlarge-mnli", lang="en")
+    bert_score_res = bert_score.compute(predictions=[preds], references=[refs], model_type="microsoft/deberta-xlarge-mnli", lang="en")
     
     return bert_score_res
 
@@ -81,6 +82,7 @@ def get_score(refs, preds,metric):
         result = BertScore(refs, preds)["f1"][0]
     elif(metric=="bleu"):
         result = bleu([refs], [preds])
+        # result = bleu_hf.compute(predictions=[preds], references=[refs])['bleu']
     elif(metric=="chrf"):
         result = sacrebleu.corpus_chrf(preds, [refs]).score
     elif(metric=="bleurt"):
@@ -128,7 +130,7 @@ def correlation_score(dict1, dict2):
     
 
 
-def evaluate(path, aspect, metric = "rougeLsum", reference_model = 'reference', few_shot = 0):
+def evaluate(path, aspect, metric = "rougeLsum", reference_model = 'reference', llm = 0):
     
     dataset_name = path.split("/")[-1].split(".")[0]
     print("evaluating dataset: ", dataset_name)
@@ -156,9 +158,11 @@ def evaluate(path, aspect, metric = "rougeLsum", reference_model = 'reference', 
         
         tmp_reference_list = []
         
-        
-        for i in range(len(tmp_news_list)):
-            tmp_reference_list.append(reference[reference['article']==tmp_news_list[i]]['summary'].values[0])
+        if(llm==1):
+            tmp_reference_list = tmp_dataset['qwen_summary'].tolist()
+        else:
+            for i in range(len(tmp_news_list)):
+                tmp_reference_list.append(reference[reference['article']==tmp_news_list[i]]['summary'].values[0])
         
         
         score_list = loop_score_api_chat(tmp_summary_list, tmp_reference_list, metric)
@@ -182,7 +186,12 @@ def evaluate(path, aspect, metric = "rougeLsum", reference_model = 'reference', 
     
 if __name__ == "__main__":
     
-    p = '/home/xbr/LLM/benchmark_llm_summarization/likert_evaluation_results_cnndm_average.json'#'./filter_annotations_summeval.jsonl'#'./filter_annotations_summeval.jsonl'# #
-    aspect = "relevance"
-    evaluate(p, aspect, metric="bertscore")
+    p = '/home/xbr/LLM/benchmark_llm_summarization/likert_evaluation_results_cnndm_average_with_llama2.json'
+    # p = '/home/xbr/LLM/benchmark_llm_summarization/likert_evaluation_results_xsum_average.json'#'./filter_annotations_summeval.jsonl'#'./filter_annotations_summeval.jsonl'# #
+    aspect = "coherence"
+    evaluate(p, aspect,metric='bleurt',reference_model='reference',llm=1)
+    # p = './filter_annotations_summeval.jsonl'#'./filter_annotations_summeval.jsonl'
+    # aspect = "expert_relevance"
+    # evaluate(p, aspect,metric="bertscore", reference_model = 'M0')
+    
 
