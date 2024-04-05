@@ -12,12 +12,16 @@ import sacrebleu
 #load bert score model
 from rouge_score import rouge_scorer, scoring
 from evaluate import load
-
+import torch
 bert_score = load("bertscore")
-bleurt = load("bleurt","BLEURT-20")
+# bleurt = load("bleurt","BLEURT-20")
 meteor = load("meteor")
 rouge_hf = load('rouge')
+bleu_hf = load("bleu")
 
+from transformers import AutoTokenizer, AutoModelForSequenceClassification
+factkb_tokenizer = AutoTokenizer.from_pretrained("roberta-base", padding="max_length", truncation=True)
+factkb_model = AutoModelForSequenceClassification.from_pretrained("bunsenfeng/FactKB", num_labels=2, device_map="auto")
 
 def rouge(refs, preds):
     """
@@ -52,9 +56,9 @@ def BertScore(refs, preds):
     
     return bert_score_res
 
-def BLEURT(refs, preds):
-    bleurt_res = bleurt.compute(predictions=[refs], references=[preds])
-    return bleurt_res
+# def BLEURT(refs, preds):
+#     bleurt_res = bleurt.compute(predictions=[refs], references=[preds])
+#     return bleurt_res
 
 def bleu(refs, preds):
     """
@@ -69,6 +73,12 @@ def bleu(refs, preds):
     score = sacrebleu.corpus_bleu(preds, refs, smooth_method="exp", smooth_value=0.0, force=False,
                                   lowercase=False, tokenize="intl", use_effective_order=False).score
     return score
+def Factkb(refs,preds):
+    input_factkb = [[preds, refs]]
+    factkb_tokens = factkb_tokenizer(input_factkb, return_tensors="pt", padding="max_length", truncation=True).to(factkb_model.device)
+    factkb_logits = factkb_model(**factkb_tokens).logits
+    factkb_res = torch.softmax(factkb_logits, dim=1)
+    return factkb_res[0][1]
 
 def get_score(refs, preds,metric):
     if(preds==""):
@@ -81,14 +91,17 @@ def get_score(refs, preds,metric):
         result = BertScore(refs, preds)["f1"][0]
     elif(metric=="bleu"):
         result = bleu([refs], [preds])
+        # result = bleu_hf.compute(predictions=[preds], references=[refs])['bleu']
     elif(metric=="chrf"):
         result = sacrebleu.corpus_chrf(preds, [refs]).score
-    elif(metric=="bleurt"):
-        result = BLEURT(refs, preds)["scores"][0]
+    # elif(metric=="bleurt"):
+    #     result = BLEURT(refs, preds)["scores"][0]
     elif(metric=="meteor"):
         result = meteor.compute(predictions=[preds], references=[refs])["meteor"]
     elif(metric=="rouge_hf"):
         result = rouge_hf.compute(predictions=[preds], references=[refs])["rougeLsum"]
+    elif(metric=="factkb"):
+        result = Factkb(preds, refs)
     
     
     return result
@@ -191,7 +204,9 @@ def evaluate(path, aspect, metric = "rougeLsum",llm=0):
     correlation_score(model_eva_dict, human_eva_dict)
     
 if __name__ == "__main__":
-    p = './filter_annotations_summeval_llama2_summary.jsonl'
+    p = './data/filter_annotations_summeval_yi34_summary_cleaning.json'
+    
+    # p = './filter_annotations_summeval_llama2_summary.jsonl'
     # p = './filter_annotations_summeval_qwen_summary.jsonl'
     # p = './filter_annotations_summeval_reference.jsonl'# #'/home/xbr/LLM/benchmark_llm_summarization/likert_evaluation_results_cnndm_average.json'
     aspect = "expert_coherence"

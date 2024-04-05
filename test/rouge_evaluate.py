@@ -12,13 +12,16 @@ import sacrebleu
 #load bert score model
 from rouge_score import rouge_scorer, scoring
 from evaluate import load
-
+import torch
 bert_score = load("bertscore")
-bleurt = load("bleurt","BLEURT-20")
+# bleurt = load("bleurt","BLEURT-20")
 meteor = load("meteor")
 rouge_hf = load('rouge')
 bleu_hf = load("bleu")
 
+from transformers import AutoTokenizer, AutoModelForSequenceClassification
+factkb_tokenizer = AutoTokenizer.from_pretrained("roberta-base", padding="max_length", truncation=True)
+factkb_model = AutoModelForSequenceClassification.from_pretrained("bunsenfeng/FactKB", num_labels=2)
 
 def rouge(refs, preds):
     """
@@ -53,9 +56,9 @@ def BertScore(refs, preds):
     
     return bert_score_res
 
-def BLEURT(refs, preds):
-    bleurt_res = bleurt.compute(predictions=[refs], references=[preds])
-    return bleurt_res
+# def BLEURT(refs, preds):
+#     bleurt_res = bleurt.compute(predictions=[refs], references=[preds])
+#     return bleurt_res
 
 def bleu(refs, preds):
     """
@@ -70,6 +73,14 @@ def bleu(refs, preds):
     score = sacrebleu.corpus_bleu(preds, refs, smooth_method="exp", smooth_value=0.0, force=False,
                                   lowercase=False, tokenize="intl", use_effective_order=False).score
     return score
+def Factkb(refs,preds):
+    factkb_res = 0
+    with torch.no_grad():
+        input_factkb = [[preds, refs]]
+        factkb_tokens = factkb_tokenizer(input_factkb, return_tensors="pt", padding="max_length", truncation=True).to(factkb_model.device)
+        factkb_logits = factkb_model(**factkb_tokens).logits
+        factkb_res = torch.softmax(factkb_logits, dim=1)
+    return factkb_res[0][1]
 
 def get_score(refs, preds,metric):
     if(preds==""):
@@ -85,12 +96,14 @@ def get_score(refs, preds,metric):
         # result = bleu_hf.compute(predictions=[preds], references=[refs])['bleu']
     elif(metric=="chrf"):
         result = sacrebleu.corpus_chrf(preds, [refs]).score
-    elif(metric=="bleurt"):
-        result = BLEURT(refs, preds)["scores"][0]
+    # elif(metric=="bleurt"):
+    #     result = BLEURT(refs, preds)["scores"][0]
     elif(metric=="meteor"):
         result = meteor.compute(predictions=[preds], references=[refs])["meteor"]
     elif(metric=="rouge_hf"):
         result = rouge_hf.compute(predictions=[preds], references=[refs])["rougeLsum"]
+    elif(metric=="factkb"):
+        result = Factkb(preds, refs)
     
     
     return result
@@ -130,7 +143,7 @@ def correlation_score(dict1, dict2):
     
 
 
-def evaluate(path, aspect, metric = "rougeLsum", reference_model = 'reference', llm = 0):
+def evaluate(path, aspect, metric = "rougeLsum", reference_model = 'reference', llm = 0,src_doc=0):
     
     dataset_name = path.split("/")[-1].split(".")[0]
     print("evaluating dataset: ", dataset_name)
@@ -158,8 +171,10 @@ def evaluate(path, aspect, metric = "rougeLsum", reference_model = 'reference', 
         
         tmp_reference_list = []
         
-        if(llm==1):
+        if(llm==1 and src_doc==0):
             tmp_reference_list = tmp_dataset['qwen_summary'].tolist()
+        elif(src_doc==1):
+            tmp_reference_list = tmp_dataset['article'].tolist()    
         else:
             for i in range(len(tmp_news_list)):
                 tmp_reference_list.append(reference[reference['article']==tmp_news_list[i]]['summary'].values[0])
@@ -186,10 +201,12 @@ def evaluate(path, aspect, metric = "rougeLsum", reference_model = 'reference', 
     
 if __name__ == "__main__":
     
-    p = '/home/xbr/LLM/benchmark_llm_summarization/likert_evaluation_results_cnndm_average_with_llama2.json'
+    # p = './data/likert_evaluation_results_cnndm_average_with_yi34b_cleaning.json'
+    p = './data/filter_annotations_summeval_reference.jsonl'
+    # p = '/home/xbr/LLM/benchmark_llm_summarization/likert_evaluation_results_cnndm_average_with_llama2.json'
     # p = '/home/xbr/LLM/benchmark_llm_summarization/likert_evaluation_results_xsum_average.json'#'./filter_annotations_summeval.jsonl'#'./filter_annotations_summeval.jsonl'# #
-    aspect = "coherence"
-    evaluate(p, aspect,metric='bleurt',reference_model='reference',llm=1)
+    aspect = "expert_consistency"
+    evaluate(p, aspect,metric='factkb',reference_model='M0',llm=0,src_doc=1)
     # p = './filter_annotations_summeval.jsonl'#'./filter_annotations_summeval.jsonl'
     # aspect = "expert_relevance"
     # evaluate(p, aspect,metric="bertscore", reference_model = 'M0')

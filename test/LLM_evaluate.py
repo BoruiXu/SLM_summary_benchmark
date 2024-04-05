@@ -17,7 +17,7 @@ client = OpenAI(
     base_url=openai_api_base,
 )
 
-llm_model = "abacusai/Smaug-72B-v0.1"#"davidkim205/Rhea-72b-v0.5"#"meta-llama/Llama-2-70b-chat-hf"#"Qwen/Qwen1.5-72B-Chat"
+llm_model = "01-ai/Yi-34B-Chat"#"davidkim205/Rhea-72b-v0.5"#"meta-llama/Llama-2-70b-chat-hf"#"Qwen/Qwen1.5-72B-Chat"
 
 
 #define function block
@@ -27,7 +27,7 @@ def generate_prompt(few_shot: int, aspect:str, refer_news = None, refer_summary 
     prompt = "You are a helpful summary assistant."
     aspect = aspect.split("_")[-1]
     
-    if(aspect!="Faithfulness"):
+    if(aspect!="faithfulness"):
         base_prompt = "In this task, you will be provided with a news article and a generated summary.\n"\
                 "Your task is to rate the " + aspect +" of the generated summary with a score from 1 to 5, "\
                 "where 1 is the lowest and 5 is the highest.\n"\
@@ -73,7 +73,7 @@ def generate_prompt(few_shot: int, aspect:str, refer_news = None, refer_summary 
 #get socre using openai api
 def score_api_chat(client, model_name, prompt, user_input, temperature = 0):
     
-    if("chat" in model_name):
+    if("chat" in model_name or "Chat" in model_name):
         chat_response = client.chat.completions.create(
                 model=model_name,
                 messages=[
@@ -88,10 +88,23 @@ def score_api_chat(client, model_name, prompt, user_input, temperature = 0):
             # "\n\nReference summary: "
             #         +reference_summary+
         res = chat_response.choices[0].message.content
-        print(res)    
-        match = re.search(r':\s*(\d+)', res)   
-        score = match.group(1) if match is not None else 1
-        return int(score)
+        print(res)
+        if('faithfulness' in prompt):    
+            match = re.search(r':\s*(\d+)', res)   
+            score = match.group(1) if match is not None else 0
+            if(score>1):
+                score = 1
+            if(score<0):
+                score = 0
+            return int(score)
+        else:
+            match = re.search(r':\s*(\d+)', res)   
+            score = match.group(1) if match is not None else 1
+            if(score>5):
+                score = 5
+            if(score<1):
+                score = 1
+            return int(score)
     else:
         completion = client.completions.create(model="abacusai/Smaug-72B-v0.1",
                                       prompt=prompt+"\n"+user_input,
@@ -224,6 +237,7 @@ def evaluate(path, aspect, client, llm_model, reference_model = 'reference', few
     
 if __name__ == "__main__":
     
-    p = './filter_annotations_summeval.jsonl' #'/home/xbr/LLM/benchmark_llm_summarization/likert_evaluation_results_xsum_average.json'
-    aspect = "expert_coherence"
-    evaluate(p, aspect, client, llm_model, reference_model = 'M0')
+    p = './data/likert_evaluation_results_cnndm_average.json'
+    # p = './data/filter_annotations_summeval.jsonl' #'/home/xbr/LLM/benchmark_llm_summarization/likert_evaluation_results_xsum_average.json'
+    aspect = "faithfulness"
+    evaluate(p, aspect, client, llm_model, reference_model = 'reference')
