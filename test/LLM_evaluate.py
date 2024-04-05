@@ -92,6 +92,7 @@ def score_api_chat(client, model_name, prompt, user_input, temperature = 0):
         if('faithfulness' in prompt):    
             match = re.search(r':\s*(\d+)', res)   
             score = match.group(1) if match is not None else 0
+            score = int(score)
             if(score>1):
                 score = 1
             if(score<0):
@@ -100,6 +101,7 @@ def score_api_chat(client, model_name, prompt, user_input, temperature = 0):
         else:
             match = re.search(r':\s*(\d+)', res)   
             score = match.group(1) if match is not None else 1
+            score = int(score)
             if(score>5):
                 score = 5
             if(score<1):
