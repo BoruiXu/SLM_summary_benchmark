@@ -17,7 +17,7 @@ client = OpenAI(
     base_url=openai_api_base,
 )
 
-llm_model = "01-ai/Yi-34B-Chat"#"davidkim205/Rhea-72b-v0.5"#"meta-llama/Llama-2-70b-chat-hf"#"Qwen/Qwen1.5-72B-Chat"
+llm_model = "Qwen/Qwen1.5-32B-Chat"#"davidkim205/Rhea-72b-v0.5"#"meta-llama/Llama-2-70b-chat-hf"#"Qwen/Qwen1.5-72B-Chat"
 
 
 #define function block
@@ -88,24 +88,37 @@ def score_api_chat(client, model_name, prompt, user_input, temperature = 0):
             # "\n\nReference summary: "
             #         +reference_summary+
         res = chat_response.choices[0].message.content
-        print(res)
+        # print(res)
         if('faithfulness' in prompt):    
-            match = re.search(r':\s*(\d+)', res)   
-            score = match.group(1) if match is not None else 0
+            match = re.search(r':\s*(\d+)', res)
+            
+            if(match is not None):
+                score = match.group(1)
+            else:
+                match = re.search(r'^\d$', res)
+                score = match.group() if match is not None else 0
+                
             score = int(score)
             if(score>1):
                 score = 1
             if(score<0):
                 score = 0
+            print(f"Res: {res}, Score: {score}")
             return int(score)
         else:
-            match = re.search(r':\s*(\d+)', res)   
-            score = match.group(1) if match is not None else 1
+            match = re.search(r':\s*(\d+)', res)
+            if(match is not None):
+                score = match.group(1)
+            else:
+                match = re.search(r'^\d$', res)
+                score = match.group() if match is not None else 0   
+            # score = match.group(1) if match is not None else 1
             score = int(score)
             if(score>5):
                 score = 5
             if(score<1):
                 score = 1
+            print(f"Res: {res}, Score: {score}")
             return int(score)
     else:
         completion = client.completions.create(model="abacusai/Smaug-72B-v0.1",
@@ -239,7 +252,7 @@ def evaluate(path, aspect, client, llm_model, reference_model = 'reference', few
     
 if __name__ == "__main__":
     
-    p = './data/likert_evaluation_results_cnndm_average.json'
-    # p = './data/filter_annotations_summeval.jsonl' #'/home/xbr/LLM/benchmark_llm_summarization/likert_evaluation_results_xsum_average.json'
-    aspect = "faithfulness"
-    evaluate(p, aspect, client, llm_model, reference_model = 'reference')
+    # p = './data/likert_evaluation_results_xsum_average.json'
+    p = './data/filter_annotations_summeval.jsonl' #'/home/xbr/LLM/benchmark_llm_summarization/likert_evaluation_results_xsum_average.json'
+    aspect = "expert_consistency"
+    evaluate(p, aspect, client, llm_model, reference_model = 'M0')
