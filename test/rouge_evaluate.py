@@ -127,17 +127,22 @@ def correlation_score(dict1, dict2):
     for i in dict1.keys():
         tmp_list1.append(np.mean(dict1[i]))
         tmp_list2.append(np.mean(dict2[i]))
-        
+    
     print("kendalltau correlation of system level is ", kendalltau(tmp_list1, tmp_list2)[0])
     print("spearmans correlation of system level is ", spearmanr(tmp_list1, tmp_list2)[0])
     
     #summary level
     total_corr = 0
     total_corr2 = 0
-    
+    print("*"*20)
     for i in dict1.keys():
-        total_corr+=kendalltau(dict1[i], dict2[i])[0]
-        total_corr2+=spearmanr(dict1[i], dict2[i])[0]
+        r1 = kendalltau(dict1[i], dict2[i])[0]
+        r2 = spearmanr(dict1[i], dict2[i])[0]
+        total_corr+= r1
+        total_corr2+=r2
+        print(f"per systmem kendalltau correlation, model: {i}, r: {r1}")
+        print(f"per systmem spearmans correlation, model: {i}, r: {r2}")
+    print("*"*20)
     print("kendalltau correlation of summary level is ", total_corr/len(dict1.keys()))
     print("spearmans correlation of summary level is ", total_corr2/len(dict1.keys()))
     
@@ -201,12 +206,14 @@ def evaluate(path, aspect, metric = "rougeLsum", reference_model = 'reference', 
     
 if __name__ == "__main__":
     
-    # p = './data/likert_evaluation_results_cnndm_average_with_yi34b_cleaning.json'
-    p = './data/filter_annotations_summeval_reference.jsonl'
+    #不能测summeval！！！！！！！！！！！！！！！！！！！！！！！！！
+    #不能测summeval！！！！！！！！！！！！！！！！！！！！！！！！！
+    p = './data/likert_evaluation_results_xsum_average_with_qwen32b_cleaning.jsonl'
+   
     # p = '/home/xbr/LLM/benchmark_llm_summarization/likert_evaluation_results_cnndm_average_with_llama2.json'
     # p = '/home/xbr/LLM/benchmark_llm_summarization/likert_evaluation_results_xsum_average.json'#'./filter_annotations_summeval.jsonl'#'./filter_annotations_summeval.jsonl'# #
-    aspect = "expert_consistency"
-    evaluate(p, aspect,metric='factkb',reference_model='M0',llm=0,src_doc=1)
+    aspect = "relevance"
+    evaluate(p, aspect,metric='rougeLsum',reference_model='M0',llm=0,src_doc=0)
     # p = './filter_annotations_summeval.jsonl'#'./filter_annotations_summeval.jsonl'
     # aspect = "expert_relevance"
     # evaluate(p, aspect,metric="bertscore", reference_model = 'M0')

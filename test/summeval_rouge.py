@@ -136,18 +136,32 @@ def correlation_score(dict1, dict2):
     for i in dict1.keys():
         tmp_list1.append(np.mean(dict1[i]))
         tmp_list2.append(np.mean(dict2[i]))
+    
     print("kendalltau correlation of system level is ", kendalltau(tmp_list1, tmp_list2)[0])
     print("spearmans correlation of system level is ", spearmanr(tmp_list1, tmp_list2)[0])
     
     #summary level
     total_corr = 0
     total_corr2 = 0
-    
+    print("*"*20)
     for i in dict1.keys():
-        total_corr+=kendalltau(dict1[i], dict2[i])[0]
-        total_corr2+=spearmanr(dict1[i], dict2[i])[0]
+        r1 = kendalltau(dict1[i], dict2[i])[0]
+        r2 = spearmanr(dict1[i], dict2[i])[0]
+        total_corr+= r1
+        total_corr2+=r2
+        print(f"per systmem kendalltau correlation, model: {i}, r: {r1}")
+        print(f"per systmem spearmans correlation, model: {i}, r: {r2}")
+    print("*"*20)
     print("kendalltau correlation of summary level is ", total_corr/len(dict1.keys()))
     print("spearmans correlation of summary level is ", total_corr2/len(dict1.keys()))
+    
+    # tmp_list1 = []
+    # tmp_list2 = []
+    # for i in dict1.keys():
+    #     tmp_list1.extend(dict1[i])
+    #     tmp_list2.extend(dict2[i])
+    # print("kendalltau correlation of summary level is ", kendalltau(tmp_list1, tmp_list2)[0])
+    # print("spearmans correlation of summary level is ", spearmanr(tmp_list1, tmp_list2)[0])
     
 
 
@@ -161,7 +175,6 @@ def evaluate(path, aspect, metric = "rougeLsum",llm=0):
     model_list = list(set(target_dataset['model'].tolist()))
     model_list.remove('M0')
     model_list = sorted(model_list)
-    
     
     
     #save result    
@@ -204,11 +217,11 @@ def evaluate(path, aspect, metric = "rougeLsum",llm=0):
     correlation_score(model_eva_dict, human_eva_dict)
     
 if __name__ == "__main__":
-    p = './data/filter_annotations_summeval_yi34_summary_cleaning.json'
+    p = './data/filter_annotations_summeval_qwen_summary.jsonl'
     
     # p = './filter_annotations_summeval_llama2_summary.jsonl'
     # p = './filter_annotations_summeval_qwen_summary.jsonl'
     # p = './filter_annotations_summeval_reference.jsonl'# #'/home/xbr/LLM/benchmark_llm_summarization/likert_evaluation_results_cnndm_average.json'
-    aspect = "expert_coherence"
-    evaluate(p, aspect,metric="bleurt",llm=1)
+    aspect = "expert_relevance"
+    evaluate(p, aspect,metric="rougeLsum",llm=1)
 

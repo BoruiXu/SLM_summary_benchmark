@@ -31,21 +31,21 @@ from datasets import load_dataset
 
 
 #generate qwen summary
-#data = json.load(open('/home/xbr/LLM/benchmark_llm_summarization/likert_evaluation_results_cnndm_average.json'))
-data = json.load(open('./filter_annotations_summeval.jsonl'))
+# data = json.load(open('/home/xbr/LLM/benchmark_llm_summarization/likert_evaluation_results_cnndm_average.json'))
+data = json.load(open('./data/filter_annotations_summeval.jsonl'))
 
 for i in tqdm(range(len(data))):
     news = data[i]['article']
     
     chat_response = client.chat.completions.create(
-        model="01-ai/Yi-34B-Chat",
+        model="Qwen/Qwen1.5-32B-Chat",
         messages=[
             {"role": "system", "content": prompt},
-            {"role": "user", "content": "Summarize the news in two sentences.\nnews: "+news+'\nSummary: '},
+            {"role": "user", "content": "Summarize the news in two sentences.\nNews: "+news+'\nSummary: '},
             
         ],
         temperature=0,
-        max_tokens=50,
+        max_tokens=70,#40
     )
     
     res = chat_response.choices[0].message.content
@@ -55,5 +55,6 @@ for i in tqdm(range(len(data))):
 #save to json
 #./filter_annotations_summeval_llama2_summary.jsonl
 #/home/xbr/LLM/benchmark_llm_summarization/likert_evaluation_results_cnndm_average_with_yi34b.json
-with open('./filter_annotations_summeval_yi34_summary.jsonl', 'w') as f:
+# with open('./data/likert_evaluation_results_cnndm_average_with_qwen32b.jsonl', 'w') as f:
+with open('./data/filter_annotations_summeval_qwen32b_summary.jsonl', 'w') as f:
     json.dump(data, f, indent=4)
