@@ -17,7 +17,7 @@ client = OpenAI(
     base_url=openai_api_base,
 )
 
-llm_model = "Qwen/Qwen1.5-32B-Chat"#"davidkim205/Rhea-72b-v0.5"#"meta-llama/Llama-2-70b-chat-hf"#"Qwen/Qwen1.5-72B-Chat"
+llm_model = "meta-llama/Meta-Llama-3-70B-Instruct"#"Qwen/Qwen1.5-32B-Chat"#"davidkim205/Rhea-72b-v0.5"#"meta-llama/Llama-2-70b-chat-hf"#"Qwen/Qwen1.5-72B-Chat"
 
 
 #define function block
@@ -73,7 +73,7 @@ def generate_prompt(few_shot: int, aspect:str, refer_news = None, refer_summary 
 #get socre using openai api
 def score_api_chat(client, model_name, prompt, user_input, temperature = 0):
     
-    if("chat" in model_name or "Chat" in model_name):
+    if("chat" in model_name or "Chat" in model_name or "meta-llama/Meta-Llama-3-70B-Instruct" == model_name):
         chat_response = client.chat.completions.create(
                 model=model_name,
                 messages=[
@@ -88,7 +88,7 @@ def score_api_chat(client, model_name, prompt, user_input, temperature = 0):
             # "\n\nReference summary: "
             #         +reference_summary+
         res = chat_response.choices[0].message.content
-        # print(res)
+        #print(res)
         if('faithfulness' in prompt):    
             match = re.search(r':\s*(\d+)', res)
             
@@ -252,7 +252,7 @@ def evaluate(path, aspect, client, llm_model, reference_model = 'reference', few
     
 if __name__ == "__main__":
     
-    # p = './data/likert_evaluation_results_xsum_average.json'
-    p = './data/filter_annotations_summeval.jsonl' #'/home/xbr/LLM/benchmark_llm_summarization/likert_evaluation_results_xsum_average.json'
-    aspect = "expert_consistency"
-    evaluate(p, aspect, client, llm_model, reference_model = 'M0')
+    p = './data/likert_evaluation_results_cnndm_average.json'
+    #p = './data/filter_annotations_summeval.jsonl' #'/home/xbr/LLM/benchmark_llm_summarization/likert_evaluation_results_xsum_average.json'
+    aspect = "faithfulness"
+    evaluate(p, aspect, client, llm_model, reference_model = 'reference')
