@@ -11,7 +11,7 @@ import json
 from scipy.stats import kendalltau
 
 
-prompt = "You are a helpful summary assistant. You can help users summarize news in two sentences."
+prompt = "You are a helpful summary assistant. You can help users summarize news in two sentences." #two sentences
 
 
 from openai import OpenAI          
@@ -47,30 +47,32 @@ def clean_summary(summary):
 #generate qwen summary
 # data = json.load(open('/home/xbr/LLM/benchmark_llm_summarization/likert_evaluation_results_cnndm_average.json'))
 # data = json.load(open('/home/xbr/LLM/summary_benchmark/dataset/sample_500/cnndm_sample_500_0k5_1k5.jsonl'))
-data = json.load(open('/home/xbr/LLM/summary_benchmark/dataset/sample_500/bbc2024_sample_500_0k5_1k5.jsonl'))
-
-for i in tqdm(range(len(data))):
-    news = data[i]['article']
+files = ['cnndm','newsroom','xsum','bbc2024']
+for f in files:
+    data = json.load(open('/home/xbr/LLM/summary_benchmark/dataset/sample_500/'+f+'_sample_500_0k5_1k5.jsonl'))
     
-    chat_response = client.chat.completions.create(
-        model="Qwen/Qwen1.5-72B-Chat",
-        messages=[
-            {"role": "system", "content": prompt},
-            {"role": "user", "content": "Please summarize the news in two sentences.\nNews: "+news+'\nSummary: '},
-            
-        ],
-        temperature=0,
-        max_tokens=80,#40
-    )
-    
-    res = chat_response.choices[0].message.content
-    res = clean_summary(res)
-    print(res)    
-    data[i]['qwen_reference_summary'] = res
-    
-#save to json
-#./filter_annotations_summeval_llama2_summary.jsonl
-#/home/xbr/LLM/benchmark_llm_summarization/likert_evaluation_results_cnndm_average_with_yi34b.json
-# with open('./data/likert_evaluation_results_cnndm_average_with_qwen32b.jsonl', 'w') as f:
-with open('bbc2024_sample_500_0k5_1k5_qwen_summary.jsonl', 'w') as f:
-    json.dump(data, f, indent=4)
+    for i in tqdm(range(len(data))):
+        news = data[i]['article']
+        
+        chat_response = client.chat.completions.create(
+            model="Qwen/Qwen1.5-72B-Chat",
+            messages=[
+                {"role": "system", "content": prompt},
+                {"role": "user", "content": "Please summarize the news in two sentences.\nNews: "+news+'\nSummary: '}, #two sentences
+                
+            ],
+            temperature=0,
+            #max_tokens=80,
+        )
+        
+        res = chat_response.choices[0].message.content
+        res = clean_summary(res)
+        print(res)    
+        data[i]['qwen_reference_summary'] = res
+        
+    #save to json
+    #./filter_annotations_summeval_llama2_summary.jsonl
+    #/home/xbr/LLM/benchmark_llm_summarization/likert_evaluation_results_cnndm_average_with_yi34b.json
+    # with open('./data/likert_evaluation_results_cnndm_average_with_qwen32b.jsonl', 'w') as f:
+    with open(f+'_sample_500_0k5_1k5_qwen1.5_72b_summary_no_len_limit.jsonl', 'w') as f:
+        json.dump(data, f, indent=4)

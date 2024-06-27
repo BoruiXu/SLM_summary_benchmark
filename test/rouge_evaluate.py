@@ -208,12 +208,13 @@ if __name__ == "__main__":
     
     #不能测summeval！！！！！！！！！！！！！！！！！！！！！！！！！
     #不能测summeval！！！！！！！！！！！！！！！！！！！！！！！！！
-    p = './data/likert_evaluation_results_xsum_average_with_qwen32b_cleaning.jsonl'
+    #p = './data/likert_evaluation_results_xsum_average_with_qwen32b_cleaning.jsonl'
+    p = './data/likert_evaluation_results_cnndm_average_with_llama3_70b_no_limit_len.jsonl'
    
     # p = '/home/xbr/LLM/benchmark_llm_summarization/likert_evaluation_results_cnndm_average_with_llama2.json'
     # p = '/home/xbr/LLM/benchmark_llm_summarization/likert_evaluation_results_xsum_average.json'#'./filter_annotations_summeval.jsonl'#'./filter_annotations_summeval.jsonl'# #
     aspect = "relevance"
-    evaluate(p, aspect,metric='rougeLsum',reference_model='M0',llm=0,src_doc=0)
+    evaluate(p, aspect,metric='rougeLsum',reference_model='reference',llm=1,src_doc=0)
     # p = './filter_annotations_summeval.jsonl'#'./filter_annotations_summeval.jsonl'
     # aspect = "expert_relevance"
     # evaluate(p, aspect,metric="bertscore", reference_model = 'M0')

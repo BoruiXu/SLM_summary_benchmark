@@ -62,7 +62,7 @@ for f in files:
                 
             ],
             temperature=0,
-            max_tokens=40,#80
+            max_tokens=100,
         )
         
         res = chat_response.choices[0].message.content
@@ -74,5 +74,5 @@ for f in files:
     #./filter_annotations_summeval_llama2_summary.jsonl
     #/home/xbr/LLM/benchmark_llm_summarization/likert_evaluation_results_cnndm_average_with_yi34b.json
     # with open('./data/likert_evaluation_results_cnndm_average_with_qwen32b.jsonl', 'w') as f:
-    with open(f+'_sample_500_0k5_1k5_qwen2_summary_40.jsonl', 'w') as f:
+    with open(f+'_sample_500_0k5_1k5_qwen2_summary_100_len_limit.jsonl', 'w') as f:
         json.dump(data, f, indent=4)

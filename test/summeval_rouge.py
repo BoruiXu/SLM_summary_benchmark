@@ -217,11 +217,11 @@ def evaluate(path, aspect, metric = "rougeLsum",llm=0):
     correlation_score(model_eva_dict, human_eva_dict)
     
 if __name__ == "__main__":
-    p = './data/filter_annotations_summeval_qwen_summary.jsonl'
+    p = './data/filter_annotations_summeval_llama3_70b_summary_no_limit_len.jsonl'
     
     # p = './filter_annotations_summeval_llama2_summary.jsonl'
     # p = './filter_annotations_summeval_qwen_summary.jsonl'
     # p = './filter_annotations_summeval_reference.jsonl'# #'/home/xbr/LLM/benchmark_llm_summarization/likert_evaluation_results_cnndm_average.json'
-    aspect = "expert_relevance"
-    evaluate(p, aspect,metric="rougeLsum",llm=1)
+    aspect = "expert_coherence"
+    evaluate(p, aspect,metric="bertscore",llm=1)
 

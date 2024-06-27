@@ -10,7 +10,7 @@ from scipy.stats import kendalltau, spearmanr
 from openai import OpenAI
 
 openai_api_key = "EMPTY"
-openai_api_base = "http://localhost:8880/v1"
+openai_api_base = "http://localhost:8881/v1"
 
 client = OpenAI(
     api_key=openai_api_key,
@@ -252,7 +252,7 @@ def evaluate(path, aspect, client, llm_model, reference_model = 'reference', few
     
 if __name__ == "__main__":
     
-    p = './data/likert_evaluation_results_xsum_average.json'
-    #p = './data/filter_annotations_summeval.jsonl' #'/home/xbr/LLM/benchmark_llm_summarization/likert_evaluation_results_xsum_average.json'
-    aspect = "relevance"
-    evaluate(p, aspect, client, llm_model, reference_model = 'reference')
+    # p = './data/likert_evaluation_results_xsum_average.json'
+    p = './data/filter_annotations_summeval.jsonl' #'/home/xbr/LLM/benchmark_llm_summarization/likert_evaluation_results_xsum_average.json'
+    aspect = "expert_coherence"
+    evaluate(p, aspect, client, llm_model, reference_model = 'M0')
