@@ -16,6 +16,9 @@ def BertScore(refs, preds):
 import re
 from tqdm import tqdm
 
+
+model_name = 'Qwen/Qwen2-1.5B'
+
 class MultiTokenEOSCriteria(transformers.StoppingCriteria):
     """Criteria to stop on the specified multi-token sequence."""
 
@@ -112,11 +115,11 @@ from transformers import AutoTokenizer, AutoModel,pipeline,AutoModelForCausalLM
 device = "cuda" # the device to load the model onto
 
 model = AutoModelForCausalLM.from_pretrained(
-    "Qwen/Qwen2-0.5B",
+    model_name,
     torch_dtype="auto",
     device_map="auto"
 )
-tokenizer = AutoTokenizer.from_pretrained("Qwen/Qwen2-0.5B")
+tokenizer = AutoTokenizer.from_pretrained(model_name)
 model = model.eval()
 
 pipe = pipeline( 
@@ -148,7 +151,7 @@ for i in range(len(llama2_files)):
     
     
     result_list = list()
-    result_name = llama2_files[i].split('.')[0] + '_qwen2-0.5b.jsonl'
+    result_name = llama2_files[i].split('.')[0] +'_'+ model_name.split('/')[1]+'.jsonl'
 
     average_score1 = 0
     average_score2 = 0
@@ -227,9 +230,9 @@ for i in range(len(llama2_files)):
     average_result[name+"_len2_prompt2"] = average_len2/len(llama2)
     
     #save result to jsonl
-    with open('./diff_prompt/qwen2-0.5b/'+result_name, 'w') as f:
+    with open('./diff_prompt/phi2/'+result_name, 'w') as f:
         json.dump(result_list, f, indent=4)
-    with open('./diff_prompt/qwen2-0.5b/average.jsonl', 'w') as f:
+    with open('./diff_prompt/phi2/average.jsonl', 'w') as f:
         json.dump([average_result], f, indent=4)
     
 

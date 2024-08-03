@@ -1,0 +1,12 @@
+[
+    {
+        "bbc2024_score_prompt1": 73.53678300380707,
+        "bbc2024_score_prompt2": 74.4306071639061,
+        "bbc2024_score_prompt3": 73.26224694252014,
+        "bbc2024_score_prompt4": 72.2912345290184,
+        "bbc2024_len1_prompt1": 44.924,
+        "bbc2024_len2_prompt2": 59.798,
+        "bbc2024_len3_prompt3": 80.324,
+        "bbc2024_len4_prompt4": 96.346
+    }
+]
