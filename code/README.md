@@ -1,0 +1,1 @@
+Due to performance degradation when the instruction-tuned version of the Qwen series does not use dialogue templates, we generate news summaries based on dialogue templates for the instruction-tuned version of the Qwen series.
