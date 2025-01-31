@@ -1,0 +1,2 @@
+task: bbc2024_llama2_no_limit_len_1_sentence
+class: !function task_bbc2024_llama2_reference_no_limit_len.bbc2024_llama2_no_limit_len_1_sentence

@@ -1,0 +1,2 @@
+task: xsum_qwen_no_limit_len
+class: !function task_xsum_qwen_reference_no_limit_len.xsum_qwen_no_limit_len

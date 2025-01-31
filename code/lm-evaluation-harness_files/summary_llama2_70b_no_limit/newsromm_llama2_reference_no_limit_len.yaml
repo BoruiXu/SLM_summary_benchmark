@@ -1,0 +1,2 @@
+task: newsroom_llama2_no_limit_len
+class: !function task_newsroom_llama2_reference_no_limit_len.newsroom_llama2_no_limit_len

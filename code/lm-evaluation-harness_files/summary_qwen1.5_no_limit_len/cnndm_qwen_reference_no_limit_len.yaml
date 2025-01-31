@@ -1,0 +1,2 @@
+task: cnndm_qwen_no_limit_len
+class: !function task_cnndm_qwen_reference_no_limit_len.cnndm_qwen_no_limit_len
